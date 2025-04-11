@@ -129,6 +129,14 @@ blue_2phase_pred <- as_tibble(predict.asreml(blue_2phase, classify = "geno_id_Me
     )
   )
 
+blue_2phase_pred_year <- as_tibble(predict.asreml(blue_2phase, classify = "geno_id_Meng:year")$pvals) %>%
+  mutate(
+    predicted.value = case_when(
+      predicted.value < 0 ~ 0,
+      predicted.value > 10 ~ 10,
+      TRUE ~ predicted.value
+    )
+  )
 
 ####################
 # Model comparison #
@@ -173,3 +181,7 @@ print(model_comparison)
 #  Reason: algorithmic stability achieved and convergence reached. #
 #                                                                  #
 ####################################################################
+
+# _______________Save results____________________
+write.csv(blue_2phase_pred, "data/processed/blue_2phase_results.csv", row.names = FALSE)
+write.csv(blue_2phase_pred_year, "data/processed/blue_2phase_by_year_results.csv", row.names = FALSE)
