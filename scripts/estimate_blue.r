@@ -1,7 +1,15 @@
-#_______________Load libraries ___________________
+#==============================================================================
+# Title: Comparison of models for estimating BLUEs in Alfala
+#
+# Date: April 11, 2025
+# Purpose: Statistical analysis of genotype spread data across multiple years
+#          using single and two-phase mixed model approaches.
+#==============================================================================
 
-library(asreml)
-library(tidyverse)
+#_____Required packages (with versions used)______
+
+library(asreml) # Version 4.2.0.332
+library(tidyverse) # Version 2.0.0
 
 #____________Upload and tidy data ________________
 
@@ -33,9 +41,12 @@ df1 <- df %>%
 df1_22 <- df1 %>% filter(year == "22") # subset data by "year" to get 2022 data.
 df1_23 <- df1 %>% filter(year == "23") # subset data by "year" to get 2023 data.
 
-####################################
-# Single Stage "Combined" Analysis #
-####################################
+#----------------------------------------------------------------
+# Single-Stage Combined Analysis
+# 
+# Description: Accounts for spatial correlation with year-specific
+#              autoregressive structures in both row and column directions
+#----------------------------------------------------------------
 #
 # NOTE: Spatial correction performed in
 # G structure due to experiement inbalances
@@ -61,9 +72,16 @@ blue_1phase_pred <- as_tibble(predict.asreml(blue_1phase, classify = "geno_id_Me
     )
   )
 
-######################
-# Two-phase analysis #
-######################
+#----------------------------------------------------------------
+# Two-Phase Analysis
+# Phase 1 Models: 
+#   Year-specific: spread ~ geno_id_Meng with residual ~ idv(Col):id(Row)
+# Phase 2 Model: predicted.value ~ geno_id_Meng + year with weights = 1/SE²
+# Description: First phase performs separate spatial analyses for each year,
+#              with BLUEs extracted along with their precision estimates.
+#              Second phase combines these BLUEs with inverse-variance 
+#              weighting to properly propagate uncertainty across years.
+#----------------------------------------------------------------
 
 # NOTE: spatial correction performed in R structure (residual)
 
@@ -179,7 +197,7 @@ print(model_comparison)
 
 ####################################################################
 #                                                                  #
-#          STASTICIAL RECCOMENDATION: 2 phase, weighted model      #
+#        STASTICIAL RECCOMENDATION: 2 phase, weighted model        #
 #  Reason: algorithmic stability achieved and convergence reached. #
 #                                                                  #
 ####################################################################
