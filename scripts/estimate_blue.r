@@ -13,7 +13,6 @@ library(tidyverse) # Version 2.0.0
 
 #____________Upload and tidy data ________________
 
-
 df <- read.csv("data/raw/input_meng.csv")
 head(df)
 
@@ -43,7 +42,7 @@ df1_23 <- df1 %>% filter(year == "23") # subset data by "year" to get 2023 data.
 
 #----------------------------------------------------------------
 # Single-Stage Combined Analysis
-# 
+#
 # Description: Accounts for spatial correlation with year-specific
 #              autoregressive structures in both row and column directions
 #----------------------------------------------------------------
@@ -74,7 +73,7 @@ blue_1phase_pred <- as_tibble(predict.asreml(blue_1phase, classify = "geno_id_Me
 
 #----------------------------------------------------------------
 # Two-Phase Analysis
-# Phase 1 Models: 
+# Phase 1 Models:
 #   Year-specific: spread ~ geno_id_Meng with residual ~ idv(Col):id(Row)
 # Phase 2 Model: predicted.value ~ geno_id_Meng + year with weights = 1/SE²
 # Description: First phase performs separate spatial analyses for each year,
