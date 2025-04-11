@@ -6,15 +6,15 @@ library(asreml)
 library(tidyr)
 
 # Read in data
-df <- read.csv("input_2.csv")
+df <- read.csv("data/raw/input_2.csv")
 head(df)
 # Check structure of the data to ensure it was read in correctly
 df1 <- df %>%
-  select(Entry, Plot, Row, Col, rep, geno_id, spread_22, spread_23) %>%
+  select(Entry, Plot, Row, Col, Rep, geno_id, spread_22, spread_23) %>%
   mutate(
     spread_22 = as.numeric(na_if(spread_22, ".")),
     spread_23 = as.numeric(na_if(spread_23, ".")),
-    across(c(Entry, Plot, Col, Row, ,geno_id, rep), as.factor)
+    across(c(Entry, Plot, Col, Row, geno_id, Rep), as.factor)
   ) %>%
   arrange(Col, Row) %>%
   pivot_longer(
@@ -48,9 +48,9 @@ var0 <- summary(blue0)$varcomp # Lets analyze variance components to have an ide
 var0
 
 # Second model with auto-regressive correlation structure for spatial correction
-blue1 <- asreml(fixed = spread ~ geno_id , 
+blue1 <- asreml(fixed = spread ~ geno_id, 
                 random = ~ ar1(Row):ar1v(Col), #auto-regressive order-1 structure for row and col, with separate col var 
-                residual = ~ idv(units),  
+                residual = ~ idv(units),
                 data = df2,
                 na.action = na.method(y = "include", x = "include"),
                 workspace = "8gb")
@@ -67,14 +67,27 @@ blue_pred_2023 <- as_tibble(predict.asreml(blue1, classify = "geno_id")$pvals) %
 write.csv(blue_pred_2023, "blue_pred_2023.csv", row.names = FALSE)
 
 #####Evaluate models with AIC, BIC and Loglikelihood values and tests
-summary(blue0)$aic
-summary(blue1)$aic 
-summary(blue0)$bic
-summary(blue1)$bic 
-logLik_model1<-summary(blue0)$loglik
-logLik_model2<-summary(blue1)$loglik
-lrt_1_vs_2 <- 2 * (logLik_model2 - logLik_model1)
-p_value_1_vs_2 <- pchisq(lrt_1_vs_2, df = 1, lower.tail = FALSE)
+model_comparison <- bind_rows(
+  tibble(
+    Model = "blue0",
+    AIC = summary(blue0)$aic,
+    BIC = summary(blue0)$bic,
+    LogLik = summary(blue0)$loglik
+  ),
+  tibble(
+    Model = "blue1",
+    AIC = summary(blue1)$aic,
+    BIC = summary(blue1)$bic,
+    LogLik = summary(blue1)$loglik
+  )
+)
+
+print(model_comparison)
+lrt_1_vs_2 <- 2 * (logLik_model2 - logLik_model1) # Test staistic
+n_params1 <- length(blue0$vparameters)
+n_params2 <- length(blue1$vparameters)
+param_dif <- n_params2 - n_params1 # How many parameters are different between the two models?
+p_value_1_vs_2 <- pchisq(lrt_1_vs_2, df = param_dif, lower.tail = FALSE)
 cat("\nLikelihood Ratio Test Results:\n")
 cat("Model 1 vs Model 2: Chi-square =", lrt_1_vs_2, " P-value =", p_value_1_vs_2, "\n")
 
@@ -107,7 +120,7 @@ write.csv(blue_pred_2022, "blue_pred_2022.csv", row.names = FALSE)
 head(df1)
 blue_combined <- asreml(fixed = spread ~ geno_id + year, # genotype as fixed corrected with year effect, which is also fixed
                   random = ~ at(year):ar1(Row):ar1v(Col), #auto-regressive order-1 structure for row and col, with separate col variance 
-                  residual = ~ idv(units),  
+                  residual = ~ idv(units),
                   data = df1,
                   na.action = na.method(y = "include", x = "include"),
                   workspace = "8gb")

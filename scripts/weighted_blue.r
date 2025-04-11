@@ -9,7 +9,7 @@ df <- read.csv("data/raw/input.csv") %>%
   mutate(spread_cm = na_if(spread_cm, ".")) %>%
   mutate(spread_cm = as.numeric(spread_cm)) %>%
   mutate(across(c(Entry, Plot, Col, Row, Rep), as.factor)) %>%
-    arrange(Col, Row)
+  arrange(Col, Row)
 
 ####################################
 #          Create BLUE             #
