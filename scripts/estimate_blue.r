@@ -166,12 +166,14 @@ model_comparison <- tibble(
 # _______________Print comparison table ______________________
 #
 # NOTE: The model with the lowest AIC/BIC is preferred - HOWEVER:
-# Information criteria (BIC, AIC) are not
-# directly comparable between models with different nesting
+# LRT cannot be used to compare models with different nesting
 # structures, e.g. (nested vs unested / 2 phase vs 1 phase).
 # This phenomenon is largely due to the fact there is a
 # significant difference in the degrees of freedom between the
 # two models (df = 6).
+#
+# For comparison, predictive ability is preferred, but would be 
+# very overkill for this situation.
 
 print(model_comparison)
 
